@@ -13,9 +13,9 @@ class Response : public Message
 
     Response(std::string data);
 
-    Response(StatusCode statusCode);
+    Response(ResponseCode statusCode);
 
-    bool AddStatusCode(StatusCode statusCode);
+    bool AddStatusCode(ResponseCode statusCode);
 
     bool AddLine(std::string line);
 };
