@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <string>
 #include <vector>
+#include <exception>
 #include "Message.h"
 #include "MessageType.h"
 
@@ -13,9 +15,11 @@ class Request : public Message
 
     Request(std::string data);
 
-    Request(MessageType statusCode);
+    Request(MessageType messageType);
 
-    bool AddMessageType(MessageType messageType);
+    Request(MessageType messageType, std::string data);
 
-    bool AddLine(std::string line);
+    void AddMessageType(MessageType messageType);
+
+    void AddLine(std::string line);
 };
