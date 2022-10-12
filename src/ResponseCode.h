@@ -1,0 +1,4 @@
+enum ResponseCode {
+    OK,
+    ERR
+};
