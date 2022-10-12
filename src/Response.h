@@ -3,7 +3,7 @@
 #include "Message.h"
 #include "ResponseCode.h"
 
-class Response : public Message
+class Response : private Message
 {
     ResponseCode _statusCode;
 
@@ -11,11 +11,17 @@ class Response : public Message
 
     Response();
 
-    Response(std::string data);
+    Response(char* data);
 
     Response(ResponseCode statusCode);
 
-    bool AddResonseCode(ResponseCode statusCode);
+    void AddResonseCode(ResponseCode statusCode);
 
-    bool AddLine(std::string line);
+    void AddLine(std::string line);
+
+    char* ToChar();
+
+    void ParseData(char* data);
+
+    void ParseLine();
 };
