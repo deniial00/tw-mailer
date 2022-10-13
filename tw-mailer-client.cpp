@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
+#include "tw-mailer-request.hpp"
  
 int main(int argc, char const* argv[])
 {
@@ -58,9 +59,9 @@ int main(int argc, char const* argv[])
                     }
                 }while(reciever.length() > 8);
 
-                //receivername must onlyhave 80 letters
+                //subject must onlyhave 80 letters
                 do{
-                    std::cout << "Enter reciever subject: ";
+                    std::cout << "Enter subject: ";
                     std::cin >> subject;
                     if(reciever.length() > 80){
                         std::cout << "Invalid input: Subject must not have more than 80 letters!" << std::endl;
@@ -71,7 +72,7 @@ int main(int argc, char const* argv[])
                 std::cin >> message;
 
                 //TODO: SEND request to server
-                send(sock, req->SEND(username, reciever, subject, message), req->SEND(username, reciever, subject, message).length(), 0);
+                send(sock, req->SEND(username, reciever, subject, message).c_str(), req->SEND(username, reciever, subject, message).length(), 0);
                 //response = 'OK' or 'ERR'
                 valread = read(sock, buffer, 1024);
 
@@ -81,7 +82,7 @@ int main(int argc, char const* argv[])
                     std::cout << "List of emails from " << username << std::endl;
 
                     //TODO: LIST request to server
-                    send(sock, req->LIST(username), req->SEND(username).length(), 0);
+                    send(sock, req->LIST(username).c_str(), req->LIST(username).length(), 0);
                     //response count of messages in first line, after that one subject per line
                     valread = read(sock, buffer, 1024);
 
@@ -93,7 +94,7 @@ int main(int argc, char const* argv[])
                             std::cin >> option;
 
                             //TODO: READ request to server
-                            send(sock, req->READ(username, option), req->SEND(username, option).length(), 0);
+                            send(sock, req->READ(username, option).c_str(), req->READ(username, option).length(), 0);
                             //response 'OK' or 'ERR' in first line; username, reciever, subject, message in the next 4 lines
                             valread = read(sock, buffer, 1024);
 
@@ -103,7 +104,7 @@ int main(int argc, char const* argv[])
                             std::cin >> option;
 
                             //TODO: DELETE request to server
-                            send(sock, req->READ(username, option), req->SEND(username, option).length(), 0);
+                            send(sock, req->DEL(username, option).c_str(), req->DEL(username, option).length(), 0);
                             //response 'OK' or 'ERR'
                             valread = read(sock, buffer, 1024);
 
