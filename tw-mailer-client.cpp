@@ -127,12 +127,12 @@ int main(int argc, char const* argv[])
                 std::cout << "Invalid input!" << std::endl;
         }
     }
-    // send(sock, hello, strlen(hello), 0);
-    // printf("Hello message sent\n");
-    // valread = read(sock, buffer, 1024);
-    // printf("%s\n", buffer);
+    send(sock, hello, strlen(hello), 0);
+    printf("Hello message sent\n");
+    valread = read(sock, buffer, 1024);
+    printf("%s\n", buffer);
  
-    // // closing the connected socket
-    // close(client_fd);
+    // closing the connected socket
+    close(client_fd);
     return 0;
 }
