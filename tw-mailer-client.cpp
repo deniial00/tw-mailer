@@ -7,6 +7,7 @@
  
 int main(int argc, char const* argv[])
 {
+    Request* req = new Request();
     const char* IP = argv[1];
     int PORT = std::stoi(argv[2]);
     int sock = 0, valread, client_fd;
@@ -34,10 +35,9 @@ int main(int argc, char const* argv[])
         return -1;
     }
 
-    //send request
     int option;
     bool running = true;
-    std::string username, reciever, message;
+    std::string username, reciever, subject, message;
     std::cout << "established connection!\nEnter username: ";
     std::cin >> username;
     //sends username to server to select correct dir
@@ -49,22 +49,41 @@ int main(int argc, char const* argv[])
 
         switch(option){
             case 1:
-                //TODO: max 8 chars
+                //receivername must onlyhave 8 letters
                 do{
                     std::cout << "Enter reciever username: ";
                     std::cin >> reciever;
                     if(reciever.length() > 8){
                         std::cout << "Invalid input: Username must not have more than 8 letters!" << std::endl;
-                }
+                    }
                 }while(reciever.length() > 8);
+
+                //receivername must onlyhave 80 letters
+                do{
+                    std::cout << "Enter reciever subject: ";
+                    std::cin >> subject;
+                    if(reciever.length() > 80){
+                        std::cout << "Invalid input: Subject must not have more than 80 letters!" << std::endl;
+                    }
+                }while(subject.length() > 80);
+
                 std::cout << "Enter message:" << std::endl;
                 std::cin >> message;
+
                 //TODO: SEND request to server
+                send(sock, req->SEND(username, reciever, subject, message), req->SEND(username, reciever, subject, message).length(), 0);
+                //response = 'OK' or 'ERR'
+                valread = read(sock, buffer, 1024);
+
                 break;
             case 2:
                 while(running){
                     std::cout << "List of emails from " << username << std::endl;
+
                     //TODO: LIST request to server
+                    send(sock, req->LIST(username), req->SEND(username).length(), 0);
+                    //response count of messages in first line, after that one subject per line
+                    valread = read(sock, buffer, 1024);
 
                     std::cout << "Select option:\n1. Read Email\n2. Delete Email\n3. Back" << std::endl;
                     std::cin >> option;
@@ -72,12 +91,22 @@ int main(int argc, char const* argv[])
                         case 1:
                             std::cout << "Which message do you want to read? Enter id: ";
                             std::cin >> option;
+
                             //TODO: READ request to server
+                            send(sock, req->READ(username, option), req->SEND(username, option).length(), 0);
+                            //response 'OK' or 'ERR' in first line; username, reciever, subject, message in the next 4 lines
+                            valread = read(sock, buffer, 1024);
+
                             break;
                         case 2:
                             std::cout << "Which message do you want to delete? Enter id: ";
                             std::cin >> option;
+
                             //TODO: DELETE request to server
+                            send(sock, req->READ(username, option), req->SEND(username, option).length(), 0);
+                            //response 'OK' or 'ERR'
+                            valread = read(sock, buffer, 1024);
+
                             break;
                         case 3:
                             running = false;
