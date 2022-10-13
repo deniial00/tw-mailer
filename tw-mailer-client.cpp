@@ -50,8 +50,13 @@ int main(int argc, char const* argv[])
         switch(option){
             case 1:
                 //TODO: max 8 chars
-                std::cout << "Enter reciever username: ";
-                std::cin >> reciever;
+                do{
+                    std::cout << "Enter reciever username: ";
+                    std::cin >> reciever;
+                    if(reciever.length() > 8){
+                        std::cout << "Invalid input: Username must not have more than 8 letters!" << std::endl;
+                }
+                }while(reciever.length() > 8);
                 std::cout << "Enter message:" << std::endl;
                 std::cin >> message;
                 //TODO: SEND request to server
