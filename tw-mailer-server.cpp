@@ -2,8 +2,8 @@
 
 int main(int argc, char const* argv[])
 {
-    ServerController* server = new ServerController(8080);
-
+    ServerController* server = new ServerController(8080, "./data/");
+    
     server->Listen();
 }
 

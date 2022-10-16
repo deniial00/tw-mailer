@@ -1,13 +1,14 @@
 #include <iostream>
-#include "src/Request.h"
+#include "src/Message.hpp"
 
 int main(int argc, char const* argv[])
 {
-    std::string str = "SEND\n";
+    const char* string = "Daniel Hofbauer\nMario Gussnig\nIst das cool?\nTesty\n.\n";
+    Message request(string, strlen(string));
     
-    Request req(str.c_str());
-
-    char* data = req.ToChar();
-
-    std::cout << data;
+    std::cout   << "====================" << std::endl 
+                << "Message to server: " << std::endl 
+                << "====================" << std::endl
+                << request.ToString();
+    
 }
