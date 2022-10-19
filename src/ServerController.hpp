@@ -28,7 +28,6 @@ class ServerController
     struct sockaddr_in address;
 
     int HandleRequest(int client);
-    Message ReceiveMessage(int socket);
     std::vector<Message> GetMessagesFromDir(std::string name);
 
     public:

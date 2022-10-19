@@ -22,7 +22,6 @@ int main(int argc, char const* argv[])
     serv_addr.sin_port = htons(PORT);
  
     // Convert IPv4 and IPv6 addresses from text to binary
-    // form
     if (inet_pton(AF_INET, IP, &serv_addr.sin_addr) <= 0) {
         printf(
             "\nInvalid address/ Address not supported \n");
@@ -36,24 +35,9 @@ int main(int argc, char const* argv[])
 
     int option;
     bool running = true;
-    // std::string username, reciever, subject, message;
-    // std::cout << "established connection!\nEnter username: ";
-    // std::cin >> username;
     
     // send
-    std::string string = "Daniel Hofbauer\nMario Gussnig\nIst das cool?\nTesty\n.\n";
-    // Message request(string, strlen(string));
-    
-    // std::cout   << "====================" << std::endl 
-    //             << "Message to server: " << std::endl 
-    //             << "====================" << std::endl
-    //             << request.ToString() << std::endl;
-                // << "Debug: " << strlen(request.ToString().c_str()) << std::endl;
-    
-    // int messageLength = strlen(request.ToString().c_str());
-    // std::string reqMess = request.ToString();
-    // char* mess1 = (char*) reqMess.c_str();
-    // printf("Message: %s\n", mess1);
+    std::string string = "Send\nDaniel Hofbauer\nMario Gussnig\nIst das cool?\nTesty\n.\n";
 
     send(sock, string.c_str(), string.length(), 0);
     

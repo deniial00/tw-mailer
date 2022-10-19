@@ -64,6 +64,7 @@ void ServerController::Listen()
         // write to socket
         std::string response;
 
+        // vermutlich nd sehr sinnvoll
         switch(ret) 
         {
             case -1:
@@ -72,7 +73,7 @@ void ServerController::Listen()
                 response = "OK\n";
                 break;
         }
-        
+
         printf("====================\nMessage to client:\n%s \n====================\n", response.c_str());
         send(client, response.c_str(), response.length(),0);
         
@@ -80,19 +81,6 @@ void ServerController::Listen()
     }
 }
  
-// int ServerController::SendMessage(int socket, Message message)
-// {
-//     int messageLength = strlen(message.ToString().c_str());
-//     std::string mess = message.ToString();
-//     char* mess1 = (char*) mess.c_str();
-
-//     // return -1 if send failed
-//     if(send(socket, mess1, messageLength, 0) == -1)
-//         return -1;
-
-//     return 1;
-// }
-
 int ServerController::HandleRequest(int client)
 {
     char buffer[1024] = {0};
@@ -127,11 +115,13 @@ int ServerController::HandleRequest(int client)
 
 std::vector<Message> ServerController::GetMessages(std::string name)
 {
+    // TODO: Not working just an idea on how to implement
     std::vector<Message> messagesSent = GetMessagesFromDir(name + "/outgoing/");
     std::vector<Message> messagesReceived = GetMessagesFromDir(name + "/ingoing/");
 
     std::vector<Message> messagesCombined;
 
+    // Not sure if thats the best way 
     messagesCombined.reserve(messagesReceived.size() + messagesSent.size());
     messagesCombined.insert(messagesCombined.end(), messagesSent.begin(), messagesSent.end());
     messagesCombined.insert(messagesCombined.end(), messagesReceived.begin(), messagesReceived.end());
@@ -152,6 +142,7 @@ int ServerController::StoreMessage(Message message)
 
 std::vector<Message> ServerController::GetMessagesFromDir(std::string name)
 {
+    // TODO: get it to work? not tested lol
     std::vector<Message> messages;
 
     struct dirent* dirent_ptr;
