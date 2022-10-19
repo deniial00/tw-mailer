@@ -61,11 +61,11 @@ int main(int argc, char const* argv[])
     memset(buffer, 0x00, strlen(buffer));
     read(sock, buffer, 1024);
     
-    Message response(buffer, strlen(buffer));
+    std::string response(buffer,strlen(buffer));
     std::cout   << "====================" << std::endl 
                 << "Message from server: " << std::endl 
                 << "====================" << std::endl
-                << response.ToString();
+                << response;
 
     //sends username to server to select correct dir
     // send(sock, username.c_str(), username.length(), 0);
