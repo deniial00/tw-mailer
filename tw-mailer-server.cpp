@@ -2,7 +2,8 @@
 
 int main(int argc, char const* argv[])
 {
-    ServerController* server = new ServerController(8080, "./data/");
+    int port = std::stoi(argv[1]);
+    ServerController* server = new ServerController(port, (std::string) argv[2]);
     
     server->Listen();
 }

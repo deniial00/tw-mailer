@@ -59,7 +59,7 @@ int main(int argc, char const* argv[])
     
     // read
     memset(buffer, 0x00, strlen(buffer));
-    read(sock, buffer, strlen(buffer));
+    read(sock, buffer, 1024);
     
     Message response(buffer, strlen(buffer));
     std::cout   << "====================" << std::endl 

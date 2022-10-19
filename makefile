@@ -8,10 +8,10 @@ all: server client
 
 # -I Adds a directory used for header files and libraries
 server: $(SERVER_CPP)
-	g++ -g -Wall -o tw-server $(SERVER_CPP) -I $(HEADER_DIR)
+	g++ -g -Wall -o tw-server -std=c++11 $(SERVER_CPP) -I $(HEADER_DIR)
 
 client: $(CLIENT_CPP)
-	g++ -g -Wall -o tw-client $(CLIENT_CPP) -I $(HEADER_DIR)
+	g++ -g -Wall -o tw-client -std=c++11 $(CLIENT_CPP) -I $(HEADER_DIR)
 
 test: test.cpp src/Message.hpp src/Message.cpp
 	g++ -g -Wall -o test test.cpp src/Message.cpp 

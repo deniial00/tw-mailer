@@ -22,13 +22,12 @@
 class ServerController
 {
     private:
-    std::string _baseDir;
-    bool _isRunning;
-    int _server;
-    struct sockaddr_in _address;
+    std::string baseDir;
+    bool isRunning;
+    int server;
+    struct sockaddr_in address;
 
-    void HandleRequest(int socket);
-    int SendMessage(int socket, Message message);
+    int HandleRequest(int client);
     Message ReceiveMessage(int socket);
     std::vector<Message> GetMessagesFromDir(std::string name);
 
