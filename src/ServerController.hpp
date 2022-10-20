@@ -1,25 +1,41 @@
+#pragma once
+
+// io
 #include <netinet/in.h>
-#include <stdio.h>
-#include <iostream>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
+#include <stdio.h>
 #include <unistd.h>
-#include <string>
+#include <iostream>
+
+// general
+#include <stdlib.h>
+// #include <string.h>
+#include <vector>
+
+// dir
+#include <dirent.h>
+#include <sys/stat.h>
+#include <fnmatch.h>
+
+#include "Message.hpp"
 
 class ServerController
 {
     private:
-    bool _isRunning;
-    int _server;
-    std::string _baseDir;
-    struct sockaddr_in _address;
+    std::string baseDir;
+    bool isRunning;
+    int server;
+    struct sockaddr_in address;
 
-    void HandleRequest(int socket);
-    void Send(int socket, std::string message);
+    int HandleRequest(int client);
+    std::vector<Message> GetMessagesFromDir(std::string name);
 
     public:
     ServerController(int port);
+    ServerController(int port, std::string baseDir);
     void Listen();
+    std::vector<Message> GetMessages(std::string name);
+    int StoreMessage(Message message);
+    int DeleteMessage(Message message);
 
 };
