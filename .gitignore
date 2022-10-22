@@ -1,2 +1,11 @@
 #ignore .vscode folder
 .vscode/
+
+#ignore out folder
+out/
+
+#mac shit
+.DS_Store
+
+#git
+.gitignore

@@ -1,6 +1,6 @@
 # Create variables
 SERVER_CPP := tw-mailer-server.cpp src/ServerController.cpp src/Message.cpp
-CLIENT_CPP := tw-mailer-client.cpp src/Message.cpp
+CLIENT_CPP := tw-mailer-client.cpp src/ClientController.cpp src/Message.cpp
 HEADER_DIR := src/
 
 # Main target
