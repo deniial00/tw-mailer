@@ -24,7 +24,7 @@ class ServerController
     private:
     std::string baseDir;
     bool isRunning;
-    int server;
+    int serverSocket;
     struct sockaddr_in address;
 
     int HandleRequest(int client);

@@ -11,19 +11,19 @@ ServerController::ServerController(int port)
     this->address.sin_port = htons(port);
 
     // Creating socket file descriptor
-    if ((this->server = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((this->serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
     // Forcefully attaching socket to the port 8080
-    if (setsockopt(this->server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+    if (setsockopt(this->serverSocket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 
     // Forcefully attaching socket to the port 8080
-    if (bind(this->server, (struct sockaddr*)&this->address, sizeof(this->address)) < 0) {
+    if (bind(this->serverSocket, (struct sockaddr*)&this->address, sizeof(this->address)) < 0) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
@@ -39,21 +39,22 @@ ServerController::ServerController(int port, std::string baseDir)
 
 void ServerController::Listen()
 {
-    int client, receivedBytes = 0;
+    int client;
     int addrSize = sizeof(this->address);
 
     this->isRunning = true;
 
+    std::cout << "listening..." << std::endl;
+    
     while(this->isRunning)
     {
-        std::cout << "listening..." << std::endl;
 
-        if (listen(this->server, 3) < 0) {
+        if (listen(this->serverSocket, 3) < 0) {
             perror("error while listening");
             exit(EXIT_FAILURE);
         }
 
-        if ((client = accept(this->server, (struct sockaddr*)&this->address, (socklen_t*)&addrSize)) < 0) {
+        if ((client = accept(this->serverSocket, (struct sockaddr*)&this->address, (socklen_t*)&addrSize)) < 0) {
             perror("error while accepting");
             exit(EXIT_FAILURE);
         }
@@ -74,7 +75,9 @@ void ServerController::Listen()
                 break;
         }
 
-        printf("====================\nMessage to client:\n%s \n====================\n", response.c_str());
+        std::cout   << "Response to client:" << std::endl
+                    << response << std::endl << std::endl;
+
         send(client, response.c_str(), response.length(),0);
         
         close(client);
@@ -84,19 +87,23 @@ void ServerController::Listen()
 int ServerController::HandleRequest(int client)
 {
     char buffer[1024] = {0};
-    int receivedBytes;
+    // int receivedBytes = 0;
 
     // TODO: umbau auf max sec?
-    receivedBytes = read(client, buffer, 1024);
+    // receivedBytes = 
+    read(client, buffer, 1024);
     std::string request(buffer,strlen(buffer));
-    std::cout   << "====================" << std::endl 
-                << "Message from client:" << std::endl
-                << request << std::endl
-                << "====================" << std::endl;
+    std::cout   << std::endl << "==================" << std::endl << std::endl << "Request from client:" << std::endl
+                << request << std::endl << std::endl;
 
-    std::string header = request.substr(0, request.find("\n"));
-    std::string body = request.substr(request.find("\n"), 0);
+    try {
+        std::string header = request.substr(0, request.find("\n"));
+        std::string body = request.substr(request.find("\n"), 0);
+    } catch (...) {
+        perror("Could not parse message");
+    }
 
+    send(client, "OK\n", 4, 0);
     // TODO: ADD functions to handle request types
     // if(header == "SEND") {
 
