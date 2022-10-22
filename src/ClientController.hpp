@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "Request.hpp"
+
 
 #define BUFFER_SIZE 1024
 
@@ -18,7 +20,8 @@ class ClientController
     int serverSocket;
 
     public:
-    std::string SendRequest(std::string message);
     ClientController();
     ClientController(int port, const char* ip);
+    std::string CreateRequest(std::string mode);
+    std::string SendRequest(std::string message);
 };

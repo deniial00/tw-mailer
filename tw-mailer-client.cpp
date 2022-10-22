@@ -5,9 +5,21 @@ int main(int argc, char const* argv[])
     int port = std::stoi(argv[2]);
     ClientController* client = new ClientController(port, (const char*) argv[1]);
     
-    client->SendRequest("SEND\ntesty\n");
-}
+    std::string input;
 
+    while (input != "Quit" || toupper(input.at(0)) != 'Q')
+    {
+        std::cout << "Choose action: SEND, LIST, READ, DEL, QUIT: ";
+        std::cin >> input; 
+
+        std::string request = client->CreateRequest("Send");
+        std::string response = client->SendRequest(request);
+        
+        std::cout << std::endl << response;
+        sleep(2);
+        system("clear");
+    }
+}
 
 
 // #include <arpa/inet.h>

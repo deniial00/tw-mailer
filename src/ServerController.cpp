@@ -44,9 +44,10 @@ void ServerController::Listen()
 
     this->isRunning = true;
 
+    std::cout << "listening..." << std::endl;
+    
     while(this->isRunning)
     {
-        std::cout << "listening..." << std::endl;
 
         if (listen(this->serverSocket, 3) < 0) {
             perror("error while listening");
@@ -74,7 +75,9 @@ void ServerController::Listen()
                 break;
         }
 
-        printf("\n====================\nMessage to client:\n%s \n====================\n", response.c_str());
+        std::cout   << "Response to client:" << std::endl
+                    << response << std::endl << std::endl;
+
         send(client, response.c_str(), response.length(),0);
         
         close(client);
@@ -90,10 +93,8 @@ int ServerController::HandleRequest(int client)
     // receivedBytes = 
     read(client, buffer, 1024);
     std::string request(buffer,strlen(buffer));
-    std::cout   << "====================" << std::endl 
-                << "Message from client:" << std::endl
-                << request << std::endl
-                << "====================" << std::endl;
+    std::cout   << std::endl << "==================" << std::endl << std::endl << "Request from client:" << std::endl
+                << request << std::endl << std::endl;
 
     try {
         std::string header = request.substr(0, request.find("\n"));
