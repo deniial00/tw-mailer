@@ -2,8 +2,14 @@
 
 int main(int argc, char const* argv[])
 {
+    if(argc != 3) {
+        std::cout << "Port or IP not provided" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    const char* ip = (const char*) argv[1];
     int port = std::stoi(argv[2]);
-    ClientController* client = new ClientController(port, (const char*) argv[1]);
+    ClientController* client = new ClientController(port, ip);
     
     std::string input;
 

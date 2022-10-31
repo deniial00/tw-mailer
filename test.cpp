@@ -1,14 +1,14 @@
 #include <iostream>
 #include "src/Message.hpp"
+#include "src/ServerController.hpp"
 
 int main(int argc, char const* argv[])
 {
     const char* string = "Daniel Hofbauer\nMario Gussnig\nIst das cool?\nTesty\n.\n";
-    Message request(string, strlen(string));
+    Message mess(string, strlen(string));
     
-    std::cout   << "====================" << std::endl 
-                << "Message to server: " << std::endl 
-                << "====================" << std::endl
-                << request.ToString();
+    auto server = new ServerController(8080,"/data");
+
+    server->StoreMessageToDir(mess, "Daniel Hofbauer");
     
 }

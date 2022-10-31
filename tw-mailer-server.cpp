@@ -2,8 +2,14 @@
 
 int main(int argc, char const* argv[])
 {
+    if(argc != 2) {
+        std::cout << "Port or dataStore location not provided" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
     int port = std::stoi(argv[1]);
-    ServerController* server = new ServerController(port, (std::string) argv[2]);
+    std::string dataStore = (std::string) argv[2];
+    ServerController* server = new ServerController(port, dataStore);
     
     server->Listen();
 }

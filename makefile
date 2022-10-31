@@ -13,8 +13,8 @@ server: $(SERVER_CPP)
 client: $(CLIENT_CPP)
 	g++ -g -Wall -o out/tw-client -std=c++11 $(CLIENT_CPP) -I $(HEADER_DIR)
 
-test: test.cpp src/Message.hpp src/Message.cpp
-	g++ -g -Wall -o out/test test.cpp src/Message.cpp 
+test: test.cpp src/Message.cpp src/ServerController.cpp 
+	g++ -g -Wall -o out/test -std=c++11 test.cpp src/Message.cpp src/ServerController.cpp -I $(HEADER_DIR)
 
 clean: 
 	rm tw-server

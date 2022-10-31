@@ -18,6 +18,11 @@ Message::Message(const char* data, int length)
     this->ParseData(temp);
 }
 
+Message::Message(std::string data)
+{
+    this->ParseData(data);
+}
+
 void Message::ParseData(std::string data)
 {
     int lineNum = 0;
@@ -47,15 +52,14 @@ void Message::ParseData(std::string data)
 
         data.erase(0, pos + delimiter.length());
     }
+
+    this->SetIdentifier();
 }
 
 
 std::string Message::ToString()
 {
     std::string temp = _sender + "\n" + _receiver + "\n" + _subject + "\n" + _message + "\n.\n";
-
-    // char* message = (char*)temp.c_str();
-    // char* message = (char*)temp.c_str();
     
     return temp;
 }
@@ -85,3 +89,39 @@ void Message::SetMessage(std::string message)
 {
     _message = message;
 }
+
+std::string Message::SetIdentifier(std::string identifier)
+{
+    if(identifier != "") 
+    {
+        _identifier = identifier;
+        return _identifier;
+    }
+    std::time_t t = std::time(0);  // t is an integer type
+    _identifier = _sender + _receiver + _subject + std::to_string(t);
+    _identifier.erase (std::remove (_identifier.begin(), _identifier.end(), ' '), _identifier.end()); 
+    return _identifier;   
+}
+
+std::string Message::GetIdentifier()
+{
+    return _identifier;
+}
+
+std::string Message::GetSender()
+{
+    return _sender;
+
+}
+
+std::string Message::GetReceiver()
+{
+    return _receiver;
+
+}
+
+std::string Message::GetSubject()
+{
+    return _subject;
+}
+

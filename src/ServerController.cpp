@@ -60,21 +60,9 @@ void ServerController::Listen()
         }
 
         // read from socket
-        int ret = this->HandleRequest(client);
+        std::string response = this->HandleRequest(client);
 
         // write to socket
-        std::string response;
-
-        // vermutlich nd sehr sinnvoll
-        switch(ret) 
-        {
-            case -1:
-                response = "Error\n";
-            case 1:
-                response = "OK\n";
-                break;
-        }
-
         std::cout   << "Response to client:" << std::endl
                     << response << std::endl << std::endl;
 
@@ -84,38 +72,78 @@ void ServerController::Listen()
     }
 }
  
-int ServerController::HandleRequest(int client)
+std::string ServerController::HandleRequest(int client)
 {
     char buffer[1024] = {0};
+
+    std::string header, body, response = "";
     // int receivedBytes = 0;
 
-    // TODO: umbau auf max sec?
-    // receivedBytes = 
+    // TODO: umbau auf timeout after MAX_SEC?
     read(client, buffer, 1024);
     std::string request(buffer,strlen(buffer));
     std::cout   << std::endl << "==================" << std::endl << std::endl << "Request from client:" << std::endl
                 << request << std::endl << std::endl;
 
     try {
-        std::string header = request.substr(0, request.find("\n"));
-        std::string body = request.substr(request.find("\n"), 0);
+        header = request.substr(0, request.find("\n"));
+        body = request.substr(request.find("\n"), 0);
     } catch (...) {
-        perror("Could not parse message");
+        perror("[ERROR] Could not parse message");
+        return "ERR\n";
     }
 
-    send(client, "OK\n", 4, 0);
     // TODO: ADD functions to handle request types
-    // if(header == "SEND") {
+    if(header == "SEND") {
+        // store message
+        Message mess(body);
+        response = this->StoreMessageToDir(mess,mess.GetSender());
+        response = this->StoreMessageToDir(mess,mess.GetReceiver());
 
-    // } else if (header == "LIST") {
+        // TODO: test both ^
 
-    // } else if (header == "READ") {
+    } else if (header == "LIST") {
+        // retrieve outbox and inbox of user
+        std::vector<Message> list = this->GetMessages(body);
+        response = std::to_string(list.size()) + "\n";
+        for(auto& mess : list)
+        {
+            response.append(mess.GetSubject() + "\n");
+        }
+    } else if (header == "READ") {
 
-    // } else if (header == "DEL") {
+    } else if (header == "DEL") {
 
-    // } else {
-    //     std::cout << "[ERROR] Wrong Request Type" << std::endl;
-    // }
+    } else {
+        std::cout << "[ERROR] Wrong Request Type" << std::endl;
+        response = "ERR\n";
+    }
+
+    return response;
+
+}
+
+int ServerController::StoreMessageToDir(Message message, std::string user)
+{
+    FILE* file;
+    errno = 0;
+    std::string filePath = this->baseDir + "/" + user;
+    mkdir(filePath.c_str(), 0777);
+
+    filePath += "/" + message.GetIdentifier() + ".twmsg";
+
+    if((file = fopen(filePath.c_str(), "w")) == nullptr) {
+        std::cout << "[ERROR] Could not open file \"" << filePath << "\"" << std::endl;
+        printf("Error: %d (%s)\n", errno, strerror(errno));
+        return -1;
+    }
+
+    if(fprintf(file, "%s", message.ToString().c_str()) < 0 ) {
+        std::cout << "[ERROR] Could not write to file \"" << filePath << "\"" << std::endl;
+        return -1;
+    }
+
+    fclose(file);
 
     return 1;
 }
@@ -134,11 +162,6 @@ std::vector<Message> ServerController::GetMessages(std::string name)
     messagesCombined.insert(messagesCombined.end(), messagesReceived.begin(), messagesReceived.end());
 
     return messagesCombined;
-}
-
-int ServerController::StoreMessage(Message message)
-{
-    return 1;
 }
 
 // int ServerController::DeleteMessage(Message message)

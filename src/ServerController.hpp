@@ -9,6 +9,7 @@
 
 // general
 #include <stdlib.h>
+#include <errno.h>
 // #include <string.h>
 #include <vector>
 
@@ -27,15 +28,15 @@ class ServerController
     int serverSocket;
     struct sockaddr_in address;
 
-    int HandleRequest(int client);
-    std::vector<Message> GetMessagesFromDir(std::string name);
+    std::string HandleRequest(int client);
+    std::vector<Message> GetMessagesFromDir(std::string messageIdentifier);
 
     public:
     ServerController(int port);
     ServerController(int port, std::string baseDir);
     void Listen();
     std::vector<Message> GetMessages(std::string name);
-    int StoreMessage(Message message);
-    int DeleteMessage(Message message);
+    int StoreMessageToDir(Message message, std::string user);
+    std::string DeleteMessage(std::string messageIdentifier);
 
 };
