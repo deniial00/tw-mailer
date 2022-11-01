@@ -1,8 +1,9 @@
 #ignore .vscode folder
 .vscode/
 
-#ignore out folder
+#ignore folders
 out/
+data/
 
 #mac shit
 .DS_Store

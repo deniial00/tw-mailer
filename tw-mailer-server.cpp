@@ -2,7 +2,7 @@
 
 int main(int argc, char const* argv[])
 {
-    if(argc != 2) {
+    if(argc != 3) {
         std::cout << "Port or dataStore location not provided" << std::endl;
         exit(EXIT_FAILURE);
     }

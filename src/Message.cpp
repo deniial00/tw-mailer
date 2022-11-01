@@ -18,9 +18,10 @@ Message::Message(const char* data, int length)
     this->ParseData(temp);
 }
 
-Message::Message(std::string data)
+Message::Message(std::string data, std::string identifier)
 {
     this->ParseData(data);
+    this->SetIdentifier(identifier);
 }
 
 void Message::ParseData(std::string data)
@@ -32,17 +33,16 @@ void Message::ParseData(std::string data)
 
     while ((pos = data.find(delimiter)) != std::string::npos) {
         line = data.substr(0, pos);
-        lineNum++;
 
         switch(lineNum)
         {
-            case 1:
+            case 0:
                 this->SetSender(line);
                 break;
-            case 2:
+            case 1:
                 this->SetReceiver(line);
                 break;
-            case 3:
+            case 2:
                 this->SetSubject(line);
                 break;
             default:
@@ -51,9 +51,8 @@ void Message::ParseData(std::string data)
         }
 
         data.erase(0, pos + delimiter.length());
+        lineNum++;
     }
-
-    this->SetIdentifier();
 }
 
 
@@ -97,9 +96,13 @@ std::string Message::SetIdentifier(std::string identifier)
         _identifier = identifier;
         return _identifier;
     }
+
     std::time_t t = std::time(0);  // t is an integer type
     _identifier = _sender + _receiver + _subject + std::to_string(t);
+
+    // remove whitespaces
     _identifier.erase (std::remove (_identifier.begin(), _identifier.end(), ' '), _identifier.end()); 
+    
     return _identifier;   
 }
 
@@ -123,5 +126,20 @@ std::string Message::GetReceiver()
 std::string Message::GetSubject()
 {
     return _subject;
+}
+
+std::string Message::GetMessage()
+{
+    return _message;
+}
+
+std::ostream& operator<< (std::ostream& os, Message& mess) {
+    os << "Identifier:" << mess.GetIdentifier() << std::endl
+       << "Sender:    " << mess.GetSender() << std::endl
+       << "Receiver:  " << mess.GetReceiver() << std::endl
+       << "Subject:   " << mess.GetSubject() << std::endl
+       << "Message:   " << mess.GetMessage() << std::endl;
+
+    return os;
 }
 

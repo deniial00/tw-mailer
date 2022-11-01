@@ -4,11 +4,15 @@
 
 int main(int argc, char const* argv[])
 {
-    const char* string = "Daniel Hofbauer\nMario Gussnig\nIst das cool?\nTesty\n.\n";
-    Message mess(string, strlen(string));
+    std::string string = "Daniel Hofbauer\nMario Gussnig\nDas ist ein süsser Test\nJa, der ist wirklich sehr süss..\n.\n";
+    Message mess(string, "DanielHofbauerMarioGussnigDasisteinsüsserTest1667331180");
     
-    auto server = new ServerController(8080,"/data");
+    auto server = new ServerController(8080,"./data");
 
-    server->StoreMessageToDir(mess, "Daniel Hofbauer");
+    // auto list = server->GetMessages("Daniel Hofbauer");
+    server->DeleteMessage(mess);
+    // std::cout << list.size();
+
+    // std::cout << list.at(0) << std::endl;
     
 }

@@ -13,14 +13,14 @@ class Request{
         return "LIST\n" + username + "\n";
     };
 
-    std::string static READ(std::string username, int option)
+    std::string static READ(std::string username, std::string option)
     {
-        return "READ\n" + username + "\n" + std::to_string(option) + "\n";
+        return "READ\n" + username + "\n" + option + "\n";
     };
 
-    std::string static DEL(std::string username, int option)
+    std::string static DEL(std::string username, std::string option)
     {
-        return "READ\n" + username + "\n" + std::to_string(option) + "\n";
+        return "DEL\n" + username + "\n" + option + "\n";
     };
 
 };

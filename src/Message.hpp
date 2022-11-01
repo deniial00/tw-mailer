@@ -19,7 +19,7 @@ class Message
     public:
     // Message(std::string id);
     Message(const char* data, int length);
-    Message(std::string data);
+    Message(std::string data, std::string identifier = "");
     void SetSender(std::string sender);
     void SetReceiver(std::string receiver);
     int SetSubject(std::string subject);
@@ -28,7 +28,8 @@ class Message
     std::string GetSender();
     std::string GetReceiver();
     std::string GetSubject();
+    std::string GetMessage();
     std::string GetIdentifier();
     std::string ToString();
+    friend std::ostream& operator<<(std::ostream& os, Message& mess);
 };
-

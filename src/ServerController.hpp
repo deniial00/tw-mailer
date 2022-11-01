@@ -16,7 +16,6 @@
 // dir
 #include <dirent.h>
 #include <sys/stat.h>
-#include <fnmatch.h>
 
 #include "Message.hpp"
 
@@ -29,14 +28,13 @@ class ServerController
     struct sockaddr_in address;
 
     std::string HandleRequest(int client);
-    std::vector<Message> GetMessagesFromDir(std::string messageIdentifier);
+    std::vector<Message> GetMessagesFromDir(std::string filepath);
+    int StoreMessageToDir(Message message, std::string user, std::string subfolder);
 
     public:
     ServerController(int port);
     ServerController(int port, std::string baseDir);
     void Listen();
     std::vector<Message> GetMessages(std::string name);
-    int StoreMessageToDir(Message message, std::string user);
-    std::string DeleteMessage(std::string messageIdentifier);
-
+    int DeleteMessage(Message message);
 };
