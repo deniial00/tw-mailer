@@ -1,14 +1,18 @@
 #include <iostream>
 #include "src/Message.hpp"
+#include "src/ServerController.hpp"
 
 int main(int argc, char const* argv[])
 {
-    const char* string = "Daniel Hofbauer\nMario Gussnig\nIst das cool?\nTesty\n.\n";
-    Message request(string, strlen(string));
+    std::string string = "Daniel Hofbauer\nMario Gussnig\nDas ist ein süsser Test\nJa, der ist wirklich sehr süss..\n.\n";
+    Message mess(string, "DanielHofbauerMarioGussnigDasisteinsüsserTest1667331180");
     
-    std::cout   << "====================" << std::endl 
-                << "Message to server: " << std::endl 
-                << "====================" << std::endl
-                << request.ToString();
+    auto server = new ServerController(8080,"./data");
+
+    // auto list = server->GetMessages("Daniel Hofbauer");
+    server->DeleteMessage(mess);
+    // std::cout << list.size();
+
+    // std::cout << list.at(0) << std::endl;
     
 }

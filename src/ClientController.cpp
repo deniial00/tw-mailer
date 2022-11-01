@@ -56,60 +56,70 @@ std::string ClientController::CreateRequest(std::string mode)
     // if(mode == NULL)
     //     return -1;
 
-    std::string response = "";
+    std::string response, username = "", option;
 
-    switch(mode.at(0))
-    {
-        // 83 == S
-        case 83:
-        {
-            // send message
-            std::string sender, receiver, subject, message = "";
-            std::string messageLine;
+    if(mode == "SEND") {
+        // send message
+        std::string sender, receiver, subject, message = "";
+        std::string messageLine;
 
-            std::cout << "Sender:   ";
-            std::cin >> sender;
-            std::cout << "Receiver: ";
-            std::cin >> receiver;
-            std::cout << "Subject:  ";
-            std::cin >> subject;
-            std::cout << "Message: (end with '.' + ENTER)" << std::endl;
+        std::cout << "Sender:   ";
+        // std::cin >> sender;
+        std::getline(std::cin, sender);
 
-            while (std::getline(std::cin, messageLine))
-            {
-                if (messageLine == ".") {
-                    break;
-                }
-                message.append(messageLine + "\n");
-            }
-
-            std::cout << "Message:" << std::endl << message;
-            response = Request::SEND(sender, receiver, subject, message);
-            break;
-        }
-        // 76 == L
-        case 76:
-            // list messages
-            break;
-        // 82 == R
-        case 82:
-            // read message
-            break;
-        // 68 == D
-        case 68:
-            // delete message
-            break;
-        // 81 == Q
-        case 81:
-            // quit
-            std::cout << "Shutting down ... Ok" << std::endl;
-            exit(EXIT_SUCCESS);
-            break;
-        // invalid
-        default:
-            std::cout << std::endl << "Invalid Input. Try again" << std::endl;
-        break;
-    }
+        std::cout << "Receiver: ";
+        // std::cin >> receiver;
+        std::getline(std::cin, receiver);
         
+        do {
+            std::cout << "Subject:  ";
+            std::getline(std::cin, subject);
+        } while(subject.length() > 80);
+
+        std::cout << "Message: (end with '.' + ENTER)" << std::endl;
+        
+        // std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        while (std::getline(std::cin, messageLine))
+        {
+            if (messageLine == ".") {
+                break;
+            }
+            message.append(messageLine + "\n");
+        }
+
+        response = Request::SEND(sender, receiver, subject, message);
+    } else if(mode == "LIST") {
+        //get list of messages
+        std::cout << "Username:   ";
+        std::getline(std::cin, username);
+        response = Request::LIST(username);
+
+    } else if(mode == "READ") {
+        //read message at index
+        std::cout << "Username:   ";
+        std::getline(std::cin, username);
+
+        std::cout << "Enter index of email you want to read:   ";
+        std::getline(std::cin, option);
+        
+        response = Request::READ(username, option);
+
+    } else if(mode == "DEL") {
+        //delete message at index
+        std::cout << "Username:   ";
+        std::getline(std::cin, username);
+        
+        std::cout << "Enter index of email you want to delete:   ";
+        std::getline(std::cin, option);
+        
+        response = Request::DEL(username, option);
+
+    } else if(mode == "QUIT") {
+        std::cout << "Shutting down ... Ok" << std::endl;
+        exit(EXIT_SUCCESS);
+    } else {
+        std::cout << std::endl << "Invalid Input. Try again" << std::endl;
+    }
+
     return response;
 }

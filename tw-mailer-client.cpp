@@ -2,22 +2,32 @@
 
 int main(int argc, char const* argv[])
 {
+    if(argc != 3) {
+        std::cout << "Port or IP not provided" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    const char* ip = (const char*) argv[1];
     int port = std::stoi(argv[2]);
-    ClientController* client = new ClientController(port, (const char*) argv[1]);
+    ClientController* client = new ClientController(port, ip);
     
     std::string input;
 
     while (input != "Quit" || toupper(input.at(0)) != 'Q')
     {
         std::cout << "Choose action: SEND, LIST, READ, DEL, QUIT: ";
-        std::cin >> input; 
+        std::getline(std::cin, input);
 
-        std::string request = client->CreateRequest("Send");
+        do {
+            std::cout << "Invalid Input. Try again: ";
+             std::getline(std::cin, input);
+        } while(input != "SEND" && input != "LIST" && input != "DEL" && input != "READ" && input != "QUIT");
+        
+        std::string request = client->CreateRequest(input);
         std::string response = client->SendRequest(request);
         
         std::cout << std::endl << response;
         sleep(2);
-        system("clear");
     }
 }
 
