@@ -10,7 +10,7 @@ int main(int argc, char const* argv[])
     auto server = new ServerController(8080,"./data");
 
     // auto list = server->GetMessages("Daniel Hofbauer");
-    server->DeleteMessage(mess);
+    // server->DeleteMessage(mess);
     // std::cout << list.size();
 
     // std::cout << list.at(0) << std::endl;

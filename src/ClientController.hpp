@@ -23,5 +23,5 @@ class ClientController
     ClientController();
     ClientController(int port, const char* ip);
     std::string CreateRequest(std::string mode);
-    std::string SendRequest(std::string message);
+    std::string SendString(std::string message);
 };

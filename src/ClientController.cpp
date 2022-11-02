@@ -16,11 +16,9 @@ ClientController::ClientController(int port, const char* ip)
     this->serverAddress.sin_port = htons(port);
 
     std::cout << "ok" << std::endl;
-
-    // this->SendRequest("SEND\nnew sock");
 }
 
-std::string ClientController::SendRequest(std::string message)
+std::string ClientController::SendString(std::string message)
 {
     char buffer[BUFFER_SIZE] = { 0 };
     int socketDescriptor;
@@ -53,24 +51,22 @@ std::string ClientController::SendRequest(std::string message)
 
 std::string ClientController::CreateRequest(std::string mode) 
 {
-    // if(mode == NULL)
-    //     return -1;
+    std::string request, username = "", option;
 
-    std::string response, username = "", option;
-
+    // send message
     if(mode == "SEND") {
-        // send message
+        // parts of message
         std::string sender, receiver, subject, message = "";
         std::string messageLine;
 
+        // read from input
         std::cout << "Sender:   ";
-        // std::cin >> sender;
         std::getline(std::cin, sender);
 
         std::cout << "Receiver: ";
-        // std::cin >> receiver;
         std::getline(std::cin, receiver);
         
+        // get subject until less than 80 chars
         do {
             std::cout << "Subject:  ";
             std::getline(std::cin, subject);
@@ -78,21 +74,24 @@ std::string ClientController::CreateRequest(std::string mode)
 
         std::cout << "Message: (end with '.' + ENTER)" << std::endl;
         
-        // std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         while (std::getline(std::cin, messageLine))
         {
+            // break input when line only consists of .
             if (messageLine == ".") {
                 break;
             }
+
+            // append line to message
             message.append(messageLine + "\n");
         }
 
-        response = Request::SEND(sender, receiver, subject, message);
+        // created request
+        request = Request::SEND(sender, receiver, subject, message);
     } else if(mode == "LIST") {
         //get list of messages
         std::cout << "Username:   ";
         std::getline(std::cin, username);
-        response = Request::LIST(username);
+        request = Request::LIST(username);
 
     } else if(mode == "READ") {
         //read message at index
@@ -102,7 +101,7 @@ std::string ClientController::CreateRequest(std::string mode)
         std::cout << "Enter index of email you want to read:   ";
         std::getline(std::cin, option);
         
-        response = Request::READ(username, option);
+        request = Request::READ(username, option);
 
     } else if(mode == "DEL") {
         //delete message at index
@@ -112,7 +111,7 @@ std::string ClientController::CreateRequest(std::string mode)
         std::cout << "Enter index of email you want to delete:   ";
         std::getline(std::cin, option);
         
-        response = Request::DEL(username, option);
+        request = Request::DEL(username, option);
 
     } else if(mode == "QUIT") {
         std::cout << "Shutting down ... Ok" << std::endl;
@@ -121,5 +120,5 @@ std::string ClientController::CreateRequest(std::string mode)
         std::cout << std::endl << "Invalid Input. Try again" << std::endl;
     }
 
-    return response;
+    return request;
 }

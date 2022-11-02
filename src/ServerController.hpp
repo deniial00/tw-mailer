@@ -27,7 +27,7 @@ class ServerController
     int serverSocket;
     struct sockaddr_in address;
 
-    std::string HandleRequest(int client);
+    std::string HandleRequest(int client, std::string requestString);
     std::vector<Message> GetMessagesFromDir(std::string filepath);
     int StoreMessageToDir(Message message, std::string user, std::string subfolder);
 

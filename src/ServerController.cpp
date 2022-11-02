@@ -6,6 +6,7 @@ ServerController::ServerController(int port)
 
     int opt = 1;
 
+    // set valid address
     this->address.sin_family = AF_INET;
     this->address.sin_addr.s_addr = INADDR_ANY;
     this->address.sin_port = htons(port);
@@ -46,103 +47,125 @@ void ServerController::Listen()
 
     std::cout << "listening..." << std::endl;
     
+    // loop while running
     while(this->isRunning)
     {
+        // create buffer
+        char buffer[1024] = {0};
 
         if (listen(this->serverSocket, 3) < 0) {
-            perror("error while listening");
+            std::cout << "[Error] could not listen on port " << this->address.sin_port << std::endl;
             exit(EXIT_FAILURE);
         }
 
         if ((client = accept(this->serverSocket, (struct sockaddr*)&this->address, (socklen_t*)&addrSize)) < 0) {
-            perror("error while accepting");
-            exit(EXIT_FAILURE);
+            std::cout << "[Error] Could not accept client" << std::endl;
+            close(client);
+            continue;
         }
 
         // read from socket
-        std::string response = this->HandleRequest(client);
+        read(client, buffer, 1024);
+        std::string request(buffer,strlen(buffer));
 
-        // write to socket
+        std::cout   << "==================" << std::endl 
+                    << std::endl << "Request from client:" << std::endl
+                    << request << std::endl << std::endl;
+
+        // handle request and return responseString
+        std::string response = this->HandleRequest(client, request);
+
         std::cout   << "Response to client:" << std::endl
                     << response << std::endl << std::endl;
 
+        // write to socket
         send(client, response.c_str(), response.length(),0);
         
         close(client);
     }
 }
  
-std::string ServerController::HandleRequest(int client)
+std::string ServerController::HandleRequest(int client, std::string requestString)
 {
-    char buffer[1024] = {0};
 
     std::string header, body, response = "";
-    // int receivedBytes = 0;
-
-    // TODO: umbau auf timeout after MAX_SEC?
-    read(client, buffer, 1024);
-    std::string request(buffer,strlen(buffer));
-    std::cout   << std::endl << "==================" << std::endl << std::endl << "Request from client:" << std::endl
-                << request << std::endl << std::endl;
 
     try {
-        header = request.substr(0, request.find('\n'));
-        body = request.substr(request.find("\n") + 1, std::string::npos);
+        header = requestString.substr(0, requestString.find('\n'));
+        body = requestString.substr(requestString.find("\n") + 1, std::string::npos);
     } catch (...) {
         std::cout << "[ERROR] Could not parse message";
         return "ERR\n";
     }
     
-    // TODO: ADD functions to handle request types
     if(header == "SEND") {
-        // store message
-        std::cout << "body: " << body;
-        Message mess(body);
-        std::cout << mess;
-        response = this->StoreMessageToDir(mess,mess.GetReceiver(), "inbox");
-        response = this->StoreMessageToDir(mess,mess.GetSender(), "outbox");
+        // create and rint message
+        Message message(body);
+        std::cout << "body: " << message;
+        
+        // print messageage
+        std::cout << message;
 
-        // TODO: test both ^
+        // store to inbox of receiver and outbox of sender
+        response = this->StoreMessageToDir(message,message.GetReceiver(), "inbox");
+        response = this->StoreMessageToDir(message,message.GetSender(), "outbox");
+
 
     } else if (header == "LIST") {
         // retrieve outbox and inbox of user
         std::vector<Message> list = this->GetMessages(body);
 
+        // check if messages were found
         if(list.size() == 0) {
             response = "ERR\n";
             return response;
         }
+
         // amount of messages
         response = "Results: " + std::to_string(list.size()) + "\n";
         
-        int index = 0;
         // all message subjects
-        for(auto& mess : list) {
-            response.append(std::to_string(index) + ": " + mess.GetSubject() + "\n");
-            index++;
+        for (auto result = list.begin(); result < list.end(); result++){
+            int index = std::distance(list.begin(), result);
+            response.append(std::to_string(index) + ": " + result->GetSubject() + "\n");
         }
+        
     } else if (header == "READ") {
+        // split string on first newline
         std::string username = body.substr(0, body.find('\n'));
+        
+        // get next line and convert to int
         int index = std::stoi(body.substr(body.find("\n") + 1, std::string::npos));
-
+        
+        // get messages from user (inbox and outbox)
         std::vector<Message> list = this->GetMessages(username);
 
+        // check if empty if not then return message
         if(index > list.size() || list.size() == 0){
             response = "ERR\n";
-        }
-        else{
+        } else {
+            // instantiate message
+            Message temp = list.at(index);
+
+            // return ok and message
             response = "OK\n"; 
-            response += list.at(index).ToString();
+            response += temp.ToString();
         }
 
     } else if (header == "DEL") {
         // split body at new line
         std::string username = body.substr(0, body.find('\n'));
+
+        // get next line and convert to int
         int index = std::stoi(body.substr(body.find("\n") + 1, std::string::npos));
 
+        // get messages from user (inbox and outbox)
         std::vector<Message> list = this->GetMessages(username);
-                
+        
+        // instantiate message
         Message messageToDelete = list.at(index);
+
+        // delete message and return corresponding code
         if( this->DeleteMessage(messageToDelete) == -1 ) {
             response = "ERR\n";
         } else {
@@ -150,6 +173,7 @@ std::string ServerController::HandleRequest(int client)
         }
 
     } else {
+        // Should never happen.
         std::cout << "[ERROR] Wrong Request Type" << std::endl;
         response = "ERR\n";
     }
@@ -189,18 +213,21 @@ int ServerController::StoreMessageToDir(Message message, std::string user, std::
 
 std::vector<Message> ServerController::GetMessages(std::string name)
 {
-    // TODO: Not working just an idea on how to implement
+    std::vector<Message> messagesCombined;
+   
+    // remove newlines from name
     name.erase(std::remove(name.begin(), name.end(), '\n'), name.cend());
 
+    // get inbox and outbox of user
     std::vector<Message> messagesSent = this->GetMessagesFromDir(name + "/inbox");
     std::vector<Message> messagesReceived = this->GetMessagesFromDir(name + "/outbox");
-    std::vector<Message> messagesCombined;
 
-    // Not sure if thats the best way 
+    // merge both vectors
     messagesCombined.reserve(messagesReceived.size() + messagesSent.size());
     messagesCombined.insert(messagesCombined.end(), messagesSent.begin(), messagesSent.end());
     messagesCombined.insert(messagesCombined.end(), messagesReceived.begin(), messagesReceived.end());
 
+    // print error if no messages found 
     if(messagesCombined.size() == 0) {
         std::cout << "[ERROR] No Messages found" << std::endl;
     }
@@ -212,12 +239,15 @@ int ServerController::DeleteMessage(Message message)
 {
     int result = 0;
 
+    // create absolute filepath and remove
     std::string filePathOutbox = this->baseDir + "/" + message.GetSender() + "/outbox/" + message.GetIdentifier();
     result += remove(filePathOutbox.c_str());
 
+    // create absolute filepath and remove
     std::string filePathInbox = this->baseDir + "/" + message.GetReceiver() + "/inbox/" + message.GetIdentifier();
     result += remove(filePathInbox.c_str());
 
+    // both functions should return 0 on success
     if(result != 0)
         return -1;
     
@@ -226,14 +256,13 @@ int ServerController::DeleteMessage(Message message)
 
 std::vector<Message> ServerController::GetMessagesFromDir(std::string filepath)
 {
-    // TODO: get it to work? not tested lol
     std::vector<Message> messages;
 
     struct dirent* dirent_ptr;
-    // struct stat statbuf;
     DIR* dir_ptr;
     FILE* file;
 
+    // create dirpath
     filepath = this->baseDir + "/" + filepath;
 
     // open dir or return if unsuccessful
@@ -251,27 +280,33 @@ std::vector<Message> ServerController::GetMessagesFromDir(std::string filepath)
         if(fileName.compare(".") == 0 || fileName.compare("..") == 0)
             continue;
         
-        // TODO: open file and store in vector
+        // create filepath
         std::string absoluteFileName = filepath + "/" + fileName;
         
+        // open file
         if((file = fopen(absoluteFileName.c_str(), "r")) == nullptr) {
             printf("Error: %d (%s)\n", errno, strerror(errno));
             std::cout << "[ERROR] Could not open file \"" << absoluteFileName << "\"" << std::endl;
             continue;
         }
 
-        std::string messageString;
+        // append lines to messageString
+        std::string messageString = "";
         while( (fgets(buffer , 2048 , file)) != NULL) {
             messageString.append(buffer);
         }
 
+        // instantiate message and add to vector
         Message temp(messageString, fileName);
         messages.push_back(temp);
 
+        // close file
         fclose(file);
     }
 
+    // close dir 
     closedir(dir_ptr);
 
+    // return message
     return messages;
 }
