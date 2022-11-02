@@ -99,18 +99,21 @@ std::string ServerController::HandleRequest(int client, std::string requestStrin
     }
     
     if(header == "SEND") {
-        // create and rint message
-        Message message(body);
-        std::cout << "body: " << message;
-        
-        // print messageage
+        int error = 0;
+        // create and print message
+        Message message(body);        
         std::cout << message;
 
         // store to inbox of receiver and outbox of sender
-        response = this->StoreMessageToDir(message,message.GetReceiver(), "inbox");
-        response = this->StoreMessageToDir(message,message.GetSender(), "outbox");
+        error += this->StoreMessageToDir(message,message.GetReceiver(), "inbox");
+        error += this->StoreMessageToDir(message,message.GetSender(), "outbox");
 
-
+        if( error < 0 ) {
+            response = "ERR\n";
+        } else {
+            response = "OK\n";
+        }
+        
     } else if (header == "LIST") {
         // retrieve outbox and inbox of user
         std::vector<Message> list = this->GetMessages(body);
@@ -208,7 +211,7 @@ int ServerController::StoreMessageToDir(Message message, std::string user, std::
 
     fclose(file);
 
-    return 1;
+    return 0;
 }
 
 std::vector<Message> ServerController::GetMessages(std::string name)

@@ -2,7 +2,7 @@
 This is a simple server-client application used to send messages to different users over Sockets using TCP.
 
 ## USAGE Client
-./tw-mailer-client IP_V4ADDRESS PORT
+./tw-client 127.0.0.1 8080
 
 ## USAGE Server
-./tw-mailer-server PORT PATH_TO_DATA_DIR
+./out/tw-server 8080 ./data

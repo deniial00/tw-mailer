@@ -3,7 +3,7 @@
 int main(int argc, char const* argv[])
 {
     if(argc != 3) {
-        std::cout << "Port or dataStore location not provided" << std::endl;
+        std::cout << "[ERROR] Port or dataStore location not provided" << std::endl;
         exit(EXIT_FAILURE);
     }
     // get params from args

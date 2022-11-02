@@ -17,14 +17,17 @@ int main(int argc, char const* argv[])
     while (input != "Quit" || toupper(input.at(0)) != 'Q')
     {
         // menu 
+        input = "";
         std::cout << "Choose action: SEND, LIST, READ, DEL, QUIT: ";
         std::getline(std::cin, input);
-
+        
         // loop until input matches Commands
-        do {
+        while(input != "SEND" && input != "LIST" && input != "DEL" && input != "READ" && input != "QUIT") {
+            // print error if invalid
             std::cout << "Invalid Input. Try again: ";
-             std::getline(std::cin, input);
-        } while(input != "SEND" && input != "LIST" && input != "DEL" && input != "READ" && input != "QUIT");
+
+            std::getline(std::cin, input);
+        }
         
         // create request
         std::string requestString = client->CreateRequest(input);
