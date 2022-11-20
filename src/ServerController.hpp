@@ -19,6 +19,17 @@
 
 #include "Message.hpp"
 
+extern "C" {
+   #include<ldap.h>
+}
+
+#include <arpa/inet.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
+
 class ServerController
 {
     private:
@@ -26,6 +37,7 @@ class ServerController
     bool isRunning;
     int serverSocket;
     struct sockaddr_in address;
+    LDAP *ldap;
 
     std::string HandleRequest(int client);
     std::vector<Message> GetMessagesFromDir(std::string filepath);

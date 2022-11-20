@@ -19,10 +19,13 @@ class ClientController
     private:
     struct sockaddr_in serverAddress;
     int serverSocket;
+    bool loggedIn = false;
 
     public:
     ClientController();
     ClientController(int port, const char* ip);
     std::string CreateRequest(std::string mode);
     std::string SendRequest(std::string message);
+    bool getLoggedIn();
+    void setLoggedIn(bool option);
 };

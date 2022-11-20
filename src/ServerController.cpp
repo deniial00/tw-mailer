@@ -41,32 +41,57 @@ void ServerController::Listen()
 {
     int client;
     int addrSize = sizeof(this->address);
+    pid_t childpid;
 
     this->isRunning = true;
 
-    std::cout << "listening..." << std::endl;
+    // Listening for connections (upto 5)
+    if (listen(this->serverSocket, 5) == 0) {
+        printf("Listening...\n\n");
+    }
     
+    int cnt = 0;
     while(this->isRunning)
     {
+        client = accept(this->serverSocket, (struct sockaddr*)&this->address, (socklen_t*)&addrSize);
 
-        if (listen(this->serverSocket, 3) < 0) {
-            perror("error while listening");
-            exit(EXIT_FAILURE);
+        if (client < 0) {
+            exit(1);
         }
+        // Displaying information of
+        // connected client
+        printf("Connection accepted from %s:%d\n",
+               inet_ntoa(address.sin_addr),
+               ntohs(address.sin_port));
+ 
+        // Print number of clients
+        // connected till now
+        printf("Clients connected: %d\n\n",
+               ++cnt);
 
-        if ((client = accept(this->serverSocket, (struct sockaddr*)&this->address, (socklen_t*)&addrSize)) < 0) {
-            perror("error while accepting");
-            exit(EXIT_FAILURE);
+
+        if ((childpid = fork()) == 0) {
+ 
+            // read from socket
+            std::string response = this->HandleRequest(client);
+
+
+            // write to socket
+            std::cout   << "Response to client:" << std::endl
+                        << response << std::endl << std::endl;
+
+            send(client, response.c_str(), response.length(),0);
         }
 
         // read from socket
-        std::string response = this->HandleRequest(client);
+        /*std::string response = this->HandleRequest(client);
+
 
         // write to socket
         std::cout   << "Response to client:" << std::endl
                     << response << std::endl << std::endl;
 
-        send(client, response.c_str(), response.length(),0);
+        send(client, response.c_str(), response.length(),0);*/
         
         close(client);
     }
@@ -92,9 +117,209 @@ std::string ServerController::HandleRequest(int client)
         std::cout << "[ERROR] Could not parse message";
         return "ERR\n";
     }
+
+    if(header == "LOGIN"){
+        std::string temp_username = body.substr(0, body.find('\n'));
+        std::string temp_password = body.substr(body.find("\n") + 1);
+        std::string base_dn_string = "ou=people,dc=technikum-wien,dc=at";
+        std::string temp = ("uid=" + temp_username + "," + base_dn_string);
+
+        LDAP *ldap;
+        LDAPMessage *answer, *entry;
+        BerElement *ber;
+
+        int  result;
+        int  auth_method        = LDAP_AUTH_SIMPLE;
+        int  ldap_version       = LDAP_VERSION3;
+        const char *ldap_host   = "ldap.technikum.wien.at";
+        const char *ldapUri     = "ldap://ldap.technikum-wien.at:389";
+        const char *ldap_dn     = temp.c_str();
+        const char *ldap_pw     = temp_password.c_str();
+        int   ldap_port         = 389;
+        const int ldapVersion   = LDAP_VERSION3;
+
+        
+
+
+        // search settings
+        /*const char *ldapSearchBaseDomainComponent = "dc=technikum-wien,dc=at";
+        const char *ldapSearchFilter = "(uid=if21b045)";
+        ber_int_t ldapSearchScope = LDAP_SCOPE_SUBTREE;
+        const char *ldapSearchResultAttributes[] = {"uid", "cn", NULL};*/
+
+
+    int rc = 0; // return code
+   // setup LDAP connection
+   LDAP *ldapHandle;
+   rc = ldap_initialize(&ldapHandle, ldapUri);
+   if (rc != LDAP_SUCCESS)
+   {
+      fprintf(stderr, "ldap_init failed\n");
+      exit(EXIT_FAILURE);
+   }
+   printf("connected to LDAP server %s\n", ldapUri);
+
+   // set verison options
+   rc = ldap_set_option(
+       ldapHandle,
+       LDAP_OPT_PROTOCOL_VERSION, // OPTION
+       &ldapVersion);             // IN-Value
+   if (rc != LDAP_OPT_SUCCESS)
+   {
+      fprintf(stderr, "ldap_set_option(PROTOCOL_VERSION): %s\n", ldap_err2string(rc));
+      ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+      exit(EXIT_FAILURE);
+   }
+
+   rc = ldap_start_tls_s(
+       ldapHandle,
+       NULL,
+       NULL);
+
+   if (rc != LDAP_SUCCESS)
+   {
+      fprintf(stderr, "ldap_start_tls_s(): %s\n", ldap_err2string(rc));
+      ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+      exit(EXIT_FAILURE);
+   }
+
+   BerValue bindCredentials;
+   bindCredentials.bv_val = (char *)ldap_pw;
+   bindCredentials.bv_len = strlen(ldap_pw);
+   BerValue *servercredp; // server's credentials
+   rc = ldap_sasl_bind_s(
+       ldapHandle,
+       ldap_dn,
+       LDAP_SASL_SIMPLE,
+       &bindCredentials,
+       NULL,
+       NULL,
+       &servercredp);
+   if (rc != LDAP_SUCCESS)
+   {
+      fprintf(stderr, "LDAP bind error: %s\n", ldap_err2string(rc));
+      ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+      exit(EXIT_FAILURE);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   // perform ldap search
+   // https://linux.die.net/man/3/ldap_search_ext_s
+   // _s : synchronous
+   // int ldap_search_ext_s(
+   //     LDAP *ld,
+   //     char *base,
+   //     int scope,
+   //     char *filter,
+   //     char *attrs[],
+   //     int attrsonly,
+   //     LDAPControl **serverctrls,
+   //     LDAPControl **clientctrls,
+   //     struct timeval *timeout,
+   //     int sizelimit,
+   //     LDAPMessage **res );
+   /*LDAPMessage *searchResult;
+   rc = ldap_search_ext_s(
+       ldapHandle,
+       ldapSearchBaseDomainComponent,
+       ldapSearchScope,
+       ldapSearchFilter,
+       (char **)ldapSearchResultAttributes,
+       0,
+       NULL,
+       NULL,
+       NULL,
+       500,
+       &searchResult);
+   if (rc != LDAP_SUCCESS)
+   {
+      fprintf(stderr, "LDAP search error: %s\n", ldap_err2string(rc));
+      ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+      exit(EXIT_FAILURE);
+   }
+   // https://linux.die.net/man/3/ldap_count_entries
+   printf("Total results: %d\n", ldap_count_entries(ldapHandle, searchResult));
+
+   ////////////////////////////////////////////////////////////////////////////
+   // get result of search
+   // https://linux.die.net/man/3/ldap_first_entry
+   // https://linux.die.net/man/3/ldap_next_entry
+   LDAPMessage *searchResultEntry;
+   for (searchResultEntry = ldap_first_entry(ldapHandle, searchResult);
+        searchResultEntry != NULL;
+        searchResultEntry = ldap_next_entry(ldapHandle, searchResultEntry))
+   {
+      /////////////////////////////////////////////////////////////////////////
+      // Base Information of the search result entry
+      // https://linux.die.net/man/3/ldap_get_dn
+      printf("DN: %s\n", ldap_get_dn(ldapHandle, searchResultEntry));
+
+      /////////////////////////////////////////////////////////////////////////
+      // Attributes
+      // https://linux.die.net/man/3/ldap_first_attribute
+      // https://linux.die.net/man/3/ldap_next_attribute
+      //
+      // berptr: berptr, a pointer to a BerElement it has allocated to keep
+      //         track of its current position. This pointer should be passed
+      //         to subsequent calls to ldap_next_attribute() and is used to
+      //         effectively step through the entry's attributes.
+      BerElement *ber;
+      char *searchResultEntryAttribute;
+      for (searchResultEntryAttribute = ldap_first_attribute(ldapHandle, searchResultEntry, &ber);
+           searchResultEntryAttribute != NULL;
+           searchResultEntryAttribute = ldap_next_attribute(ldapHandle, searchResultEntry, ber))
+      {
+         BerValue **vals;
+         if ((vals = ldap_get_values_len(ldapHandle, searchResultEntry, searchResultEntryAttribute)) != NULL)
+         {
+            for (int i = 0; i < ldap_count_values_len(vals); i++)
+            {
+               printf("\t%s: %s\n", searchResultEntryAttribute, vals[i]->bv_val);
+            }
+            ldap_value_free_len(vals);
+         }
+
+         // free memory
+         ldap_memfree(searchResultEntryAttribute);
+      }
+      // free memory
+      if (ber != NULL)
+      {
+         ber_free(ber, 0);
+      }
+
+      printf("\n");
+   }
+
+   // free memory
+   ldap_msgfree(searchResult);*/
+
+
+
+
+
+
+    
+        
+
+        //LDAP request um zu verifizieren, ob daten passen
+
+        
+        //wenn daten passen user in vektor mit authentifizierten usern speichern und ok returnen
+        //wenn ok returnt wird nicht vergessen loggedIn bool vom clientController auf true zu setzen
+
+        //ansonten err returnen
+
+        if(true){
+            response = "OK\n";
+        }
+        else{
+            response = "ERR\n"; 
+        }
+    }
     
     // TODO: ADD functions to handle request types
-    if(header == "SEND") {
+    else if(header == "SEND") {
         // store message
         std::cout << "body: " << body;
         Message mess(body);

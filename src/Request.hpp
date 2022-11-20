@@ -23,4 +23,9 @@ class Request{
         return "DEL\n" + username + "\n" + option + "\n";
     };
 
+    std::string static LOGIN(std::string username, std::string password)
+    {
+        return "LOGIN\n" + username + "\n" + password + "\n";
+    };
+
 };

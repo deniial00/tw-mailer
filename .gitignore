@@ -3,10 +3,12 @@
 
 #ignore folders
 out/
+
+#bei data soll nur der inhalt des folders ignoriert werden und nicht der inhalt
 data/
 
 #mac shit
 .DS_Store
 
-#git
-.gitignore
+#ignore test.cpp
+.test.cpp
