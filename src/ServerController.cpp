@@ -120,7 +120,10 @@ std::string ServerController::HandleRequest(int client)
 
     if(header == "LOGIN"){
         std::string temp_username = body.substr(0, body.find('\n'));
+        std::cout << temp_username << std::endl;
         std::string temp_password = body.substr(body.find("\n") + 1);
+        temp_password.pop_back();
+        std::cout << temp_password << std::endl;
         std::string base_dn_string = "ou=people,dc=technikum-wien,dc=at";
         std::string temp = ("uid=" + temp_username + "," + base_dn_string);
 
@@ -142,10 +145,10 @@ std::string ServerController::HandleRequest(int client)
 
 
         // search settings
-        /*const char *ldapSearchBaseDomainComponent = "dc=technikum-wien,dc=at";
+        const char *ldapSearchBaseDomainComponent = "dc=technikum-wien,dc=at";
         const char *ldapSearchFilter = "(uid=if21b045)";
         ber_int_t ldapSearchScope = LDAP_SCOPE_SUBTREE;
-        const char *ldapSearchResultAttributes[] = {"uid", "cn", NULL};*/
+        const char *ldapSearchResultAttributes[] = {"uid", "cn", NULL};
 
 
     int rc = 0; // return code
@@ -218,7 +221,7 @@ std::string ServerController::HandleRequest(int client)
    //     struct timeval *timeout,
    //     int sizelimit,
    //     LDAPMessage **res );
-   /*LDAPMessage *searchResult;
+   LDAPMessage *searchResult;
    rc = ldap_search_ext_s(
        ldapHandle,
        ldapSearchBaseDomainComponent,
@@ -292,7 +295,7 @@ std::string ServerController::HandleRequest(int client)
    }
 
    // free memory
-   ldap_msgfree(searchResult);*/
+   ldap_msgfree(searchResult);
 
 
 
