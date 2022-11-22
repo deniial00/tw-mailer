@@ -27,6 +27,8 @@ extern "C" {
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fstream>
+#include <map>
 
 
 
@@ -38,6 +40,9 @@ class ServerController
     int serverSocket;
     struct sockaddr_in address;
     LDAP *ldap;
+    std::map<std::time_t, std::string> logs;
+    std::map<std::time_t, std::string> blacklist;
+    
 
     std::string HandleRequest(int client);
     std::vector<Message> GetMessagesFromDir(std::string filepath);
