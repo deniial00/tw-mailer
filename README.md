@@ -2,7 +2,7 @@
 This is a simple server-client application used to send messages to different users over Sockets using TCP.
 
 ## USAGE Client
-./out/tw-client ip port
+./out/tw-client IP PORT
 
 ## USAGE Server
-./tw-mailer-server port /data
+./tw-mailer-server PORT ./data

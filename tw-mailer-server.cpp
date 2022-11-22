@@ -9,7 +9,9 @@ int main(int argc, char const* argv[])
     
     int port = std::stoi(argv[1]);
     std::string dataStore = (std::string) argv[2];
-    ServerController* server = new ServerController(port, dataStore);
+    std::string logfile = "./src/logs.txt";
+    std::string blacklist = "./src/blacklist.txt";
+    ServerController* server = new ServerController(port, dataStore, blacklist, logfile);
     
     server->Listen();
     return 0;

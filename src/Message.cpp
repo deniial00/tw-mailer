@@ -98,7 +98,7 @@ std::string Message::SetIdentifier(std::string identifier)
     }
 
     std::time_t t = std::time(0);  // t is an integer type
-    _identifier = _sender + _receiver + _subject + std::to_string(t);
+    _identifier = _sender + "-" + _receiver + "-" + _subject + "?" + std::to_string(t);
 
     // remove whitespaces
     _identifier.erase (std::remove_if (_identifier.begin(), _identifier.end(), ::isspace), _identifier.end()); 

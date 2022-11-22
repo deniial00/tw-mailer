@@ -17,6 +17,7 @@
 class ClientController
 {
     private:
+    std::string username;
     struct sockaddr_in serverAddress;
     int serverSocket;
     bool loggedIn = false;

@@ -10,7 +10,6 @@
 // general
 #include <stdlib.h>
 #include <errno.h>
-// #include <string.h>
 #include <vector>
 
 // dir
@@ -26,9 +25,8 @@ extern "C" {
 #include <arpa/inet.h>
 #include <string.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <fstream>
-#include <map>
+
 
 
 
@@ -36,21 +34,22 @@ class ServerController
 {
     private:
     std::string baseDir;
+    std::string blacklistFilepath;
+    std::string logFilepath;
     bool isRunning;
     int serverSocket;
     struct sockaddr_in address;
-    LDAP *ldap;
-    std::map<std::time_t, std::string> logs;
-    std::map<std::time_t, std::string> blacklist;
     
-
+    int AuthOverFHTWLDAP(std::string username, std::string password);
+    int CheckBlacklist(std::string filepath);
+    void AddIpToBlacklist(int cnt);
     std::string HandleRequest(int client);
     std::vector<Message> GetMessagesFromDir(std::string filepath);
     int StoreMessageToDir(Message message, std::string user, std::string subfolder);
 
     public:
     ServerController(int port);
-    ServerController(int port, std::string baseDir);
+    ServerController(int port, std::string baseDir, std::string blacklistFilename, std::string logFilename);
     void Listen();
     std::vector<Message> GetMessages(std::string name);
     int DeleteMessage(Message message);

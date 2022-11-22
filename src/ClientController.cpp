@@ -66,7 +66,7 @@ std::string ClientController::CreateRequest(std::string mode)
     // if(mode == NULL)
     //     return -1;
 
-    std::string response, username = "", option;
+    std::string response, option;
 
     // check if user is already logged in
     if(mode != "QUIT" && mode != "LOGIN" && loggedIn == false){
@@ -74,27 +74,26 @@ std::string ClientController::CreateRequest(std::string mode)
         return "error";
     } else if(mode == "LOGIN"){
         std::string ldap_username, ldap_password;
+
         std::cout << "Username: ";
         std::cin >> ldap_username;
+        this->username = ldap_username;
+
         std::cout << "Password: ";
         std::cin >> ldap_password;
+
         response = Request::LOGIN(ldap_username, ldap_password);   
     } else if(mode == "SEND") {
         // send message
-        std::string sender, receiver, subject, message = "";
+        std::string receiver, subject, message = "";
         std::string messageLine;
 
-        std::cout << "Sender:   ";
-        std::cin >> sender;
-        //std::getline(std::cin, sender);
 
         std::cout << "Receiver: ";
         std::cin >> receiver;
-        //std::getline(std::cin, receiver);
         
         do {
             std::cout << "Subject:  ";
-            //std::getline(std::cin, subject);
             std::cin >> subject;
         } while(subject.length() > 80);
 
@@ -109,43 +108,33 @@ std::string ClientController::CreateRequest(std::string mode)
             message.append(messageLine + "\n");
         }
 
-        response = Request::SEND(sender, receiver, subject, message);
+        response = Request::SEND(this->username, receiver, subject, message);
     } else if(mode == "LIST") {
-        //get list of messages
-        std::cout << "Username:   ";
-        std::cin >> username;
-        //std::getline(std::cin, username);
-        response = Request::LIST(username);
+        // list all inbound and outbound messages
+        response = Request::LIST(this->username);
 
     } else if(mode == "READ") {
         //read message at index
-        std::cout << "Username:   ";
-        //std::getline(std::cin, username);
-        std::cin >> username;
 
-        std::cout << "Enter index of email you want to read:   ";
-        //std::getline(std::cin, option);
+        std::cout << "Enter index of the email you want to read:   ";
         std::cin >> option;
         
         response = Request::READ(username, option);
 
     } else if(mode == "DEL") {
         //delete message at index
-        std::cout << "Username:   ";
-        //std::getline(std::cin, username);
-        std::cin >> username;
         
         std::cout << "Enter index of email you want to delete:   ";
-        //std::getline(std::cin, option);
         std::cin >> option;
         
-        response = Request::DEL(username, option);
+        response = Request::DEL(this->username, option);
 
     } else if(mode == "QUIT") {
         std::cout << "Shutting down ... Ok" << std::endl;
         exit(EXIT_SUCCESS);
     } else {
         std::cout << std::endl << "Invalid Input. Try again" << std::endl;
+        response = "error";
     }
 
     return response;

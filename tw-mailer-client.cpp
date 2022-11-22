@@ -28,11 +28,12 @@ int main(int argc, char const* argv[])
 
             if(input != "LOGIN" && input != "SEND" && input != "LIST" && input != "DEL" && input != "READ" && input != "QUIT"){
                 std::cout << "Invalid Input.\n";
+                input = "";
             }
         } while(input == "");
         
         std::string request = client->CreateRequest(input);
-        if(request != "error"){
+        if (request != "error"){
             response = client->SendRequest(request);
         }
 

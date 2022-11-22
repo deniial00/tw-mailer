@@ -31,10 +31,15 @@ ServerController::ServerController(int port)
 	std::cout << "ok" << std::endl;
 }
 
-ServerController::ServerController(int port, std::string baseDir) 
+ServerController::ServerController(int port, std::string baseDir, std::string blacklistFilename, std::string logFilename) 
 : ServerController::ServerController(port)
 {
 	this->baseDir = baseDir;
+	this->logFilepath = logFilename;
+	this->blacklistFilepath = blacklistFilename;
+
+	// init baseDir for data store location
+	mkdir(baseDir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
 void ServerController::Listen()
@@ -75,25 +80,16 @@ void ServerController::Listen()
 			// read from socket
 			std::string response = this->HandleRequest(client);
 
-
 			// write to socket
 			std::cout   << "Response to client:" << std::endl
 						<< response << std::endl << std::endl;
 
 			send(client, response.c_str(), response.length(),0);
+
+			// close socket and kill child-proccess
+			close(client);
+			exit(EXIT_SUCCESS);
 		}
-
-		// read from socket
-		/*std::string response = this->HandleRequest(client);
-
-
-		// write to socket
-		std::cout   << "Response to client:" << std::endl
-					<< response << std::endl << std::endl;
-
-		send(client, response.c_str(), response.length(),0);*/
-		
-		close(client);
 	}
 }
  
@@ -102,9 +98,7 @@ std::string ServerController::HandleRequest(int client)
 	char buffer[1024] = {0};
 
 	std::string header, body, response = "";
-	// int receivedBytes = 0;
 
-	// TODO: umbau auf timeout after MAX_SEC?
 	read(client, buffer, 1024);
 	std::string request(buffer,strlen(buffer));
 	std::cout   << std::endl << "==================" << std::endl << std::endl << "Request from client:" << std::endl
@@ -119,149 +113,39 @@ std::string ServerController::HandleRequest(int client)
 	}
 
 	if(header == "LOGIN"){
+		// get username and password from body
+		int result = 0;
 		std::string temp_username = body.substr(0, body.find('\n'));
-		std::cout << temp_username << std::endl;
 		std::string temp_password = body.substr(body.find("\n") + 1);
 		temp_password.pop_back();
-		std::cout << temp_password << std::endl;
-		std::string base_dn_string = "ou=people,dc=technikum-wien,dc=at";
-		std::string temp = ("uid=" + temp_username + "," + base_dn_string);
-		std::cout << "ip: " << inet_ntoa(address.sin_addr) << std::endl;
 		
+		result += CheckBlacklist(this->blacklistFilepath);
+		
+		std::cout << "ip: " << inet_ntoa(address.sin_addr) << std::endl;
 
-		//schau, ob ip in blacklist ist
-		char filename[ ] = "src/blacklist.txt";
-		std::fstream file;
+		result += AuthOverFHTWLDAP(temp_username, temp_password);
 
-		file.open(filename, std::fstream::in);
-
-
-		// If file does not exist, Create new file
-		if (!file ) 
-		{
-			std::cout << "Cannot open file, file does not exist. Creating new file..";
-
-			file.open(filename,  std::fstream::out);
-			file <<"\n";
-			file.close();
-
-		} 
-		else   
-		{    // use existing file
-			std::cout<<"success "<<filename <<" found. \n";
-			std::cout<<"\nAppending writing and working with existing file"<<"\n---\n";
-
-			file << "Appending writing and working with existing file"<<"\n---\n";
-			file.close();
-			std::cout<<"\n";
-
+		if( result == 2 ) {
+			response = "OK\n";
+		} else {
+			response = "ERR\n";
 		}
 
-
-
-		/* if((file = fopen(filePath.c_str(), "a+")) == nullptr) {
-		printf("Error: %d (%s)\n", errno, strerror(errno));
-		std::cout << "[ERROR] Could not open file \"" << filePath << "\"" << std::endl;
-		return "";
-		}
-		std::string ip = inet_ntoa(address.sin_addr);
-		if(fprintf(file, "%s", (ip + "\n").c_str()) < 0 ) {
-			std::cout << "[ERROR] Could not write to file \"" << filePath << "\"" << std::endl;
-			return "";
-		}
-
-		fclose(file); */
-
-		//wenn nein -> normal weitermachen
-		//wenn ja -> throw error
-
-
-		LDAP *ldap;
-		LDAPMessage *answer, *entry;
-		BerElement *ber;
-
-		int  result;
-		int  auth_method        = LDAP_AUTH_SIMPLE;
-		int  ldap_version       = LDAP_VERSION3;
-		const char *ldap_host   = "ldap.technikum.wien.at";
-		const char *ldapUri     = "ldap://ldap.technikum-wien.at:389";
-		const char *ldap_dn     = temp.c_str();
-		const char *ldap_pw     = temp_password.c_str();
-		int   ldap_port         = 389;
-		const int ldapVersion   = LDAP_VERSION3;
-
-
-		int rc = 0; // return code
-		// setup LDAP connection
-		LDAP *ldapHandle;
-		rc = ldap_initialize(&ldapHandle, ldapUri);
-		if (rc != LDAP_SUCCESS)
-		{
-			fprintf(stderr, "ldap_init failed\n");
-			exit(EXIT_FAILURE);
-		}
-		printf("connected to LDAP server %s\n", ldapUri);
-
-		// set verison options
-		rc = ldap_set_option(
-			ldapHandle,
-			LDAP_OPT_PROTOCOL_VERSION, // OPTION
-			&ldapVersion);             // IN-Value
-		if (rc != LDAP_OPT_SUCCESS)
-		{
-			fprintf(stderr, "ldap_set_option(PROTOCOL_VERSION): %s\n", ldap_err2string(rc));
-			ldap_unbind_ext_s(ldapHandle, NULL, NULL);
-			exit(EXIT_FAILURE);
-		}
-
-		rc = ldap_start_tls_s(
-			ldapHandle,
-			NULL,
-			NULL);
-
-		if (rc != LDAP_SUCCESS)
-		{
-			fprintf(stderr, "ldap_start_tls_s(): %s\n", ldap_err2string(rc));
-			ldap_unbind_ext_s(ldapHandle, NULL, NULL);
-			exit(EXIT_FAILURE);
-		}
-
-		BerValue bindCredentials;
-		bindCredentials.bv_val = (char *)ldap_pw;
-		bindCredentials.bv_len = strlen(ldap_pw);
-		BerValue *servercredp; // server's credentials
-		rc = ldap_sasl_bind_s(
-			ldapHandle,
-			ldap_dn,
-			LDAP_SASL_SIMPLE,
-			&bindCredentials,
-			NULL,
-			NULL,
-			&servercredp);
-		if (rc != LDAP_SUCCESS)
-		{
-			fprintf(stderr, "LDAP bind error: %s\n", ldap_err2string(rc));
-			ldap_unbind_ext_s(ldapHandle, NULL, NULL);
-			//wenn der error invalid credentials is dann füg die ip zu den logs hinzu
-			//is die ip schon 3 mal in den logs?
-			//wenn nein -> exit 
-			//wenn ja -> adde die ip + timestamp zu der blacklist und benachrichtige user
-			response = "ERR\n"; 
-			exit(EXIT_FAILURE);
-		}
-		response = "OK\n";
-	}
-	
-	// TODO: ADD functions to handle request types
-	else if(header == "SEND") {
+	} else if(header == "SEND") {
 		// store message
+		int result = 0;
 		std::cout << "body: " << body;
 		Message mess(body);
 		std::cout << mess;
-		response = this->StoreMessageToDir(mess,mess.GetReceiver(), "inbox");
-		response = this->StoreMessageToDir(mess,mess.GetSender(), "outbox");
 
-		// TODO: test both ^
+		result += this->StoreMessageToDir(mess,mess.GetReceiver(), "inbox");
+		result += this->StoreMessageToDir(mess,mess.GetSender(), "outbox");
+
+		if( result == 2 ) {
+			response = "OK\n";
+		} else {
+			response = "ERR\n";
+		}
 
 	} else if (header == "LIST") {
 		// retrieve outbox and inbox of user
@@ -286,7 +170,7 @@ std::string ServerController::HandleRequest(int client)
 
 		std::vector<Message> list = this->GetMessages(username);
 
-		if(index > list.size() || list.size() == 0){
+		if(index > (int) list.size() || list.size() == 0){
 			response = "ERR\n";
 		}
 		else{
@@ -316,6 +200,171 @@ std::string ServerController::HandleRequest(int client)
 	return response;
 
 }
+int ServerController::CheckBlacklist(std::string filepath)
+{
+	std::fstream file;
+	std::string line;
+	int cnt = 0;
+	file.open(this->blacklistFilepath, std::fstream::in);
+
+	// if blacklist.txt does not exist, create new file
+	if (!file ) 
+	{
+		std::cout << "[Warning] Cannot open file \"" << this->blacklistFilepath << "\"file does not exist. Creating new file..";
+		file.open(this->blacklistFilepath,  std::fstream::out);
+		file.close();
+	} 
+	// if blacklist.txt does exist, check if ip is in it
+	else   
+	{    
+		while ( std::getline( file, line ) )
+		{
+			if ( line.find(inet_ntoa(address.sin_addr)) != std::string::npos )
+			{
+				//std::cout << "IP is in blacklist" << std::endl;	
+				std::time_t now = time(0);
+				std::time_t blacklistTime = atoi(line.substr(10).c_str());
+				std::cout << now << std::endl;
+				std::cout << blacklistTime << std::endl;
+				std::cout << difftime(now, blacklistTime) << std::endl;
+				if(difftime(now, blacklistTime) < 60) {
+					std::cout << "One Minute has not passed yet" << std::endl;				
+					file.close();
+					return -1;
+				}
+			}
+		}
+		file.close();
+
+	}
+
+	return 1;
+}
+
+int ServerController::AuthOverFHTWLDAP(std::string username, std::string password)
+{
+	std::string base_dn_string = "ou=people,dc=technikum-wien,dc=at";
+	std::string temp = ("uid=" + username + "," + base_dn_string);
+	LDAPMessage *answer, *entry;
+	BerElement *ber;
+
+	int  result;
+	int  auth_method        = LDAP_AUTH_SIMPLE;
+	int  ldap_version       = LDAP_VERSION3;
+	const char *ldap_host   = "ldap.technikum.wien.at";
+	const char *ldapUri     = "ldap://ldap.technikum-wien.at:389";
+	const char *ldap_dn     = temp.c_str();
+	const char *ldap_pw     = password.c_str();
+	int   ldap_port         = 389;
+	const int ldapVersion   = LDAP_VERSION3;
+
+
+	int rc = 0; // return code
+	// setup LDAP connection
+	LDAP *ldapHandle;
+	rc = ldap_initialize(&ldapHandle, ldapUri);
+	if (rc != LDAP_SUCCESS)
+	{
+		fprintf(stderr, "ldap_init failed\n");
+		return -1;
+	}
+	printf("connected to LDAP server %s\n", ldapUri);
+
+	// set verison options
+	rc = ldap_set_option(
+		ldapHandle,
+		LDAP_OPT_PROTOCOL_VERSION, // OPTION
+		&ldapVersion);             // IN-Value
+	if (rc != LDAP_OPT_SUCCESS)
+	{
+		fprintf(stderr, "ldap_set_option(PROTOCOL_VERSION): %s\n", ldap_err2string(rc));
+		ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+		return -1;
+	}
+
+	rc = ldap_start_tls_s(
+		ldapHandle,
+		NULL,
+		NULL);
+
+	if (rc != LDAP_SUCCESS)
+	{
+		fprintf(stderr, "ldap_start_tls_s(): %s\n", ldap_err2string(rc));
+		ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+		return -1;
+	}
+
+	BerValue bindCredentials;
+	bindCredentials.bv_val = (char *)ldap_pw;
+	bindCredentials.bv_len = strlen(ldap_pw);
+	BerValue *servercredp; // server's credentials
+	rc = ldap_sasl_bind_s(
+		ldapHandle,
+		ldap_dn,
+		LDAP_SASL_SIMPLE,
+		&bindCredentials,
+		NULL,
+		NULL,
+		&servercredp);
+
+	if (rc != LDAP_SUCCESS) {
+		fprintf(stderr, "LDAP bind error: %s\n", ldap_err2string(rc));
+		ldap_unbind_ext_s(ldapHandle, NULL, NULL);
+
+		// write ip to logs.txt
+		std::fstream logFile;
+		std::string line;
+
+		logFile.open(this->logFilepath,  std::fstream::app);
+		logFile << inet_ntoa(this->address.sin_addr) << "\n";
+		logFile.close();
+
+		//check if ip is in logs 3 times or more
+		int cnt = 0;
+		logFile.open(this->logFilepath, std::fstream::in);
+		while ( std::getline( logFile, line ) )
+		{
+			if ( line.find(inet_ntoa(address.sin_addr)) != std::string::npos )
+			{
+				cnt++;
+			}
+		}
+		logFile.close();
+
+		//write ip + timestamp to blacklist
+		this->AddIpToBlacklist(cnt);
+
+		return -1;
+	}
+	else{
+		return 1;
+	}
+}
+
+void ServerController::AddIpToBlacklist(int cnt)
+{
+	std::fstream file;
+	std::string line;
+	std::time_t timestamp;
+	char* temp = inet_ntoa(this->address.sin_addr);
+	if(cnt >= 3){
+			timestamp = time(0);
+			file.open(this->blacklistFilepath, std::fstream::app);
+			file << inet_ntoa(this->address.sin_addr) << ":" << timestamp << "\n";
+			file.close();
+
+			file.open(this->logFilepath, std::fstream::out);
+			while (getline(file,line) && cnt != 0)
+			{
+				if ( line.find(temp) != std::string::npos )
+				{
+					line.replace(line.find(inet_ntoa(this->address.sin_addr)) - 1, strlen(inet_ntoa(address.sin_addr)),"");
+					--cnt;
+				}
+		
+			}
+		}
+}
 
 int ServerController::StoreMessageToDir(Message message, std::string user, std::string subfolder)
 {
@@ -323,7 +372,8 @@ int ServerController::StoreMessageToDir(Message message, std::string user, std::
 	errno = 0;
 
 	std::string filePath = this->baseDir + "/" + user;
-	mkdir(filePath.c_str(), 0777);
+	std::cout << "mkdir: " << filePath << std::endl;
+	mkdir(filePath.c_str(), 0700);
 
 	filePath += "/" + subfolder;
 	mkdir(filePath.c_str(), 0777);
@@ -348,7 +398,6 @@ int ServerController::StoreMessageToDir(Message message, std::string user, std::
 
 std::vector<Message> ServerController::GetMessages(std::string name)
 {
-	// TODO: Not working just an idea on how to implement
 	name.erase(std::remove(name.begin(), name.end(), '\n'), name.cend());
 
 	std::vector<Message> messagesSent = this->GetMessagesFromDir(name + "/inbox");
@@ -385,7 +434,6 @@ int ServerController::DeleteMessage(Message message)
 
 std::vector<Message> ServerController::GetMessagesFromDir(std::string filepath)
 {
-	// TODO: get it to work? not tested lol
 	std::vector<Message> messages;
 
 	struct dirent* dirent_ptr;
@@ -410,7 +458,6 @@ std::vector<Message> ServerController::GetMessagesFromDir(std::string filepath)
 		if(fileName.compare(".") == 0 || fileName.compare("..") == 0)
 			continue;
 		
-		// TODO: open file and store in vector
 		std::string absoluteFileName = filepath + "/" + fileName;
 		
 		if((file = fopen(absoluteFileName.c_str(), "r")) == nullptr) {
